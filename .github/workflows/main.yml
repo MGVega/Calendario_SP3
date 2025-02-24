@@ -14,15 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
-      - name: Configurar Git con el usuario que hizo el push
-        run: |
-          # Obtener el autor del último commit
-          AUTHOR_NAME=$(git log -1 --pretty=format:'%an')
-          AUTHOR_EMAIL=$(git log -1 --pretty=format:'%ae')
-
-          # Configurar el nombre y correo del autor
-          git config --global user.name "$AUTHOR_NAME"
-          git config --global user.email "$AUTHOR_EMAIL"
 
       - name: Verificar si se hizo un push a la rama principal
         run: |
