@@ -1,0 +1,57 @@
+name: Crear Pull Request y Validar por Abdon
+
+on:
+  push:
+    branches:
+      - 'main'  # O la rama principal que estés utilizando (por ejemplo 'master')
+
+  pull_request_review:
+    types:
+      - submitted
+
+jobs:
+  create-pull-request:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Configurar Git con el usuario que hizo el push
+        run: |
+          # Obtener el autor del último commit
+          AUTHOR_NAME=$(git log -1 --pretty=format:'%an')
+          AUTHOR_EMAIL=$(git log -1 --pretty=format:'%ae')
+
+          # Configurar el nombre y correo del autor
+          git config --global user.name "$AUTHOR_NAME"
+          git config --global user.email "$AUTHOR_EMAIL"
+
+      - name: Verificar si se hizo un push a la rama principal
+        run: |
+          # Obtener el último commit
+          git fetch origin
+          git checkout -b new-branch
+          git merge origin/main --no-edit
+          git push origin new-branch
+
+      - name: Crear Pull Request automáticamente
+        run: |
+          # Autenticar con GitHub CLI
+          gh auth login --with-token ${{ secrets.GITHUB_TOKEN }}
+          
+          # Crear el Pull Request
+          gh pr create --base main --head new-branch --title "Pull Request Automático" --body "Este PR fue creado automáticamente tras un 'git push' a la rama principal."
+
+  check-reviewer:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request_review'
+    steps:
+      - name: Comprobar si el revisor es Abdon
+        run: |
+          # Obtener el revisor del PR
+          REVIEWER=$(curl -s https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews | jq -r '.[0].user.login')
+          
+          # Verificar si el revisor es "abdon"
+          if [ "$REVIEWER" != "agonzalezo03" ]; then
+            echo "El revisor que aprobó el PR no es Abdon. El revisor fue $REVIEWER."
+            exit 1
+          fi
+          echo "El revisor que aprobó el PR es Abdon. Continuando..."
