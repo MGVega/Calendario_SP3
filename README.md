@@ -3,3 +3,5 @@ La aplicación se lanza en React haciendo pequeñas funcionalidad y le pide dato
 
 
 TEST PULL REQUEST
+
+Aceptar PR
